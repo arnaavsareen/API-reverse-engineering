@@ -4,12 +4,15 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FileUpload } from "@/components/file-upload";
 import { CurlDisplay } from "@/components/curl-display";
 import { LoadingState } from "@/components/loading-state";
+import { ApiInfoDisplay } from "@/components/api-info-display";
+import { RequestTester } from "@/components/request-tester";
+import { CodeGenerator } from "@/components/code-generator";
+import { DocExporter } from "@/components/doc-exporter";
 import { analyzeHarFile, AnalyzeResponse } from "@/lib/api";
 import { AlertCircle, CheckCircle } from "lucide-react";
 
@@ -19,6 +22,7 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<AnalyzeResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeResultTab, setActiveResultTab] = useState("curl");
 
   // 1️⃣ Handle file selection
   const handleFileSelect = (file: File) => {
@@ -119,10 +123,66 @@ export default function HomePage() {
                 </AlertDescription>
               </Alert>
               
-              <CurlDisplay
-                curlCommand={result.curl_command}
-                requestDetails={result.request_details}
-              />
+              {/* 9️⃣ Result tabs */}
+              <div className="border rounded-lg">
+                <div className="flex border-b">
+                  {[
+                    { id: "curl", label: "cURL" },
+                    { id: "info", label: "API Info" },
+                    { id: "test", label: "Test" },
+                    { id: "code", label: "Code" },
+                    { id: "docs", label: "Export" },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveResultTab(tab.id)}
+                      className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                        activeResultTab === tab.id
+                          ? "border-primary text-primary"
+                          : "border-transparent text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="p-6">
+                  {activeResultTab === "curl" && (
+                    <CurlDisplay
+                      curlCommand={result.curl_command}
+                      requestDetails={result.request_details}
+                    />
+                  )}
+                  
+                  {activeResultTab === "info" && (
+                    <ApiInfoDisplay
+                      requestInfo={result.request_info}
+                      authInfo={result.auth_info}
+                      parameters={result.parameters}
+                    />
+                  )}
+                  
+                  {activeResultTab === "test" && (
+                    <RequestTester
+                      requestInfo={result.request_info}
+                    />
+                  )}
+                  
+                  {activeResultTab === "code" && (
+                    <CodeGenerator
+                      requestInfo={result.request_info}
+                    />
+                  )}
+                  
+                  {activeResultTab === "docs" && (
+                    <DocExporter
+                      requestInfo={result.request_info}
+                      authInfo={result.auth_info}
+                    />
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </div>
