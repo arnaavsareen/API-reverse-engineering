@@ -1,0 +1,84 @@
+# ============= DEVELOPMENT PHILOSOPHY =============
+
+DEVELOPMENT PHILOSOPHY
+
+1. Delete, delete, delete → The best feature is no feature. Ask "What happens if we don't build this at all?"
+2. Keep it as simple as possible → Straightforward over clever. Readable beats short.
+3. Build only when needed → Do not add features on speculation.
+4. One responsibility → Each function, class, or module has a single clear purpose.
+5. Avoid repetition → Extract common code, but do not over-optimize.
+6. The five-minute rule → If you cannot explain it quickly, it is too complex.
+7. Write for humans first → Clever code is bad code.
+
+What "as simple as possible" means
+
+⚠️  Simple does NOT mean short → Verbose, clear code beats terse, cryptic code.
+
+1. Understandable in under 30 seconds → If it takes longer, rewrite it.
+2. Clear, consistent, descriptive names → calculate_monthly_payment() not calc().
+3. Max three nesting levels → Prefer early returns to deep nesting.
+4. Whitespace between logical groups → Let the code breathe.
+5. Numbered comments for multi-step flows →
+	# 1️⃣ Validate the inputs ----
+	# 2️⃣ Process ----
+	# 3️⃣ Return ----
+
+Design Patterns
+
+1. Prefer functions → Default to simple functions; use classes sparingly only for state or orchestration. This does not apply to TSX/JSX obviously.
+
+2. Code size limits → These are maximums, not targets. Files: max 500 lines, Functions: max 50 lines, Classes: max 100 lines
+
+3. Interface boundaries → Only import from index files (unless intra-module).
+
+# ============= DEPENDENCIES =============
+
+DEPENDENCIES PHILOSOPHY
+
+Core Principle: Don’t reinvent what already exists
+
+1. Always prefer simple, well-documented libraries over custom solutions.
+     - Example: use validator.isEmail() instead of writing a custom regex.
+2. Pause before building: If you find yourself writing a complex utility or framework, stop and ask: “Does a mature library already solve this?”
+3. Choose proven libraries: Actively maintained, widely used, with clear docs.
+4. Keep the stack lean: Every dependency adds maintenance and security overhead.
+5. Favor stability over novelty: Pick stable, boring solutions unless there’s a clear reason otherwise.
+
+# ============= DOCUMENTATION =============
+DOCSTRINGS & COMMENTS GUIDELINES
+
+1. Docstrings → One line if possible, max three.
+2. Explain why, not what → The code should already shows what it does in a very clear way.
+3. Type hints → Always, always, always present; docstrings should not duplicate them.
+
+# ============= ERROR HANDLING =============
+ERROR HANDLING GUIDELINES
+
+Core Principle: Fail Fast & Simple
+
+Key Rules
+1. Validate only uncertain inputs: Guard against values that can realistically be None, empty, or malformed (e.g. external data, user input, API payloads). Do not re-validate things guaranteed correct by type hints or invariants.
+2. Catch only what you can handle: Let other exceptions bubble up. 
+3. Never swallow errors silently: No empty except blocks. 
+4. One try/except per function max: If you need more, refactor.
+5. Log with structured context: Use logger.error({"user_id": user_id, "error": str(e)}, "Payment failed") instead of string concatenation when context helps debugging.
+
+Pattern
+
+Bad
+try:
+    process_payment()
+    send_email() 
+    update_database()
+except:
+    pass  # Silent failure
+
+Good
+if not payment_data.is_valid():
+    raise ValueError(f"Invalid payment data: {payment_data.errors}")
+
+try:
+    result = process_payment(payment_data)
+except PaymentAPIError as e:
+    logger.error({"user_id": user_id, "error": str(e)}, "Payment failed")
+    raise  # Let caller handle
